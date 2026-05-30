@@ -1,0 +1,24 @@
+# ESP-IDF build output
+build/
+sdkconfig.old
+
+# ESP-IDF component manager downloads; restore with idf.py reconfigure/build
+managed_components/
+
+# Local editor and machine-specific settings
+.vscode/
+
+# Python/cache noise
+__pycache__/
+*.pyc
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# OS metadata
+.DS_Store
+Thumbs.db
