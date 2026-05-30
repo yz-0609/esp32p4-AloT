@@ -1,6 +1,8 @@
 #include "app_wifi.h"
 
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -9,11 +11,13 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
+#include "esp_netif_sntp.h"
 #include "esp_wifi.h"
 
 #define APP_WIFI_SSID          "Lab107_AX6"
 #define APP_WIFI_PASSWORD      "lab120120."
 #define APP_WIFI_MAXIMUM_RETRY 10
+#define APP_TIME_PRINT_PERIOD_MS 3000
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
@@ -23,6 +27,8 @@ static const char *TAG = "app_wifi";
 static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_num;
 static bool s_connected;
+static bool s_sntp_initialized;
+static bool s_time_synced;
 
 static void app_wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
@@ -47,6 +53,37 @@ static void app_wifi_event_handler(void *arg, esp_event_base_t event_base, int32
         ESP_LOGI(TAG, "Connected to %s, got IP: " IPSTR, APP_WIFI_SSID, IP2STR(&event->ip_info.ip));
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
+}
+
+static void app_time_print_now(void)
+{
+    char time_str[64] = {0};
+
+    if (app_wifi_format_time(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S") == ESP_OK) {
+        ESP_LOGI(TAG, "Network time: %s", time_str);
+    }
+}
+
+static esp_err_t app_time_sync(void)
+{
+    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG("ntp.aliyun.com");
+    ESP_RETURN_ON_ERROR(esp_netif_sntp_init(&config), TAG, "SNTP init failed");
+    s_sntp_initialized = true;
+
+    esp_err_t ret = esp_netif_sntp_sync_wait(pdMS_TO_TICKS(15000));
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "SNTP sync failed or timed out: %s", esp_err_to_name(ret));
+        esp_netif_sntp_deinit();
+        s_sntp_initialized = false;
+        return ret;
+    }
+
+    setenv("TZ", "CST-8", 1);
+    tzset();
+    s_time_synced = true;
+
+    ESP_LOGI(TAG, "SNTP time synchronized");
+    return ESP_OK;
 }
 
 static esp_err_t app_wifi_init_sta(void)
@@ -116,6 +153,20 @@ static void app_wifi_task(void *arg)
     esp_err_t ret = app_wifi_init_sta();
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Wi-Fi initialization/connect failed: %s", esp_err_to_name(ret));
+    } else {
+        while (app_time_sync() != ESP_OK) {
+            vTaskDelay(pdMS_TO_TICKS(APP_TIME_PRINT_PERIOD_MS));
+        }
+
+        while (true) {
+            app_time_print_now();
+            vTaskDelay(pdMS_TO_TICKS(APP_TIME_PRINT_PERIOD_MS));
+        }
+    }
+
+    if (s_sntp_initialized) {
+        esp_netif_sntp_deinit();
+        s_sntp_initialized = false;
     }
 
     vTaskDelete(NULL);
@@ -130,4 +181,46 @@ esp_err_t app_wifi_start(void)
 bool app_wifi_is_connected(void)
 {
     return s_connected;
+}
+
+bool app_wifi_time_is_synced(void)
+{
+    return s_time_synced;
+}
+
+esp_err_t app_wifi_get_time(struct tm *timeinfo)
+{
+    if (timeinfo == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (!s_time_synced) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    time_t now = 0;
+    time(&now);
+    localtime_r(&now, timeinfo);
+    return ESP_OK;
+}
+
+esp_err_t app_wifi_format_time(char *buffer, size_t buffer_size, const char *format)
+{
+    if (buffer == NULL || buffer_size == 0) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    struct tm timeinfo = {0};
+    esp_err_t ret = app_wifi_get_time(&timeinfo);
+    if (ret != ESP_OK) {
+        buffer[0] = '\0';
+        return ret;
+    }
+
+    const char *fmt = format != NULL ? format : "%Y-%m-%d %H:%M:%S";
+    if (strftime(buffer, buffer_size, fmt, &timeinfo) == 0) {
+        buffer[0] = '\0';
+        return ESP_ERR_INVALID_SIZE;
+    }
+
+    return ESP_OK;
 }
