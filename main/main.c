@@ -11,6 +11,7 @@
 #include "bsp_board_extra.h"
 #include "lvgl.h"
 #include "app_wifi.h"
+#include "app_weather.h"
 #include "gui_guider.h"
 
 static void app_nvs_init(void)
@@ -54,4 +55,5 @@ void app_main(void)
     bsp_display_unlock();
 
     ESP_ERROR_CHECK(app_wifi_start());
+    ESP_ERROR_CHECK(app_weather_start());
 }

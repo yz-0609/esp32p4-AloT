@@ -7,6 +7,7 @@ idf_component_register(
     SRCS
         main.c
         app_wifi.c
+        app_weather.c
         ${GUI_GUIDER_SRCS}
     INCLUDE_DIRS
         .
@@ -19,6 +20,9 @@ idf_component_register(
         esp_wifi
         esp_event
         esp_netif
+        esp_http_client
+        json
+        mbedtls
         nvs_flash
     PRIV_REQUIRES
         bsp_extra
