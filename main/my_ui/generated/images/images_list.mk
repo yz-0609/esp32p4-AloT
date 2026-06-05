@@ -1,1 +1,1 @@
-GEN_CSRCS += _longxia_720x720.c _xia_alpha_303x264.c
+GEN_CSRCS +=
