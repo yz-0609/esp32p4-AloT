@@ -1,18 +1,11 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "nvs_flash.h"
-#include "nvs.h"
-#include "esp_log.h"
 #include "esp_err.h"
-#include "esp_check.h"
-#include "esp_memory_utils.h"
 #include "bsp/esp-bsp.h"
 #include "bsp/display.h"
-#include "bsp_board_extra.h"
 #include "lvgl.h"
 #include "app_wifi.h"
 #include "app_weather.h"
-#include "gui_guider.h"
+#include "ui.h"
 
 static void app_nvs_init(void)
 {
@@ -50,7 +43,7 @@ void app_main(void)
 
     bsp_display_lock(0);
 
-    setup_ui(&guider_ui);
+    ESP_ERROR_CHECK(ui_start());
 
     bsp_display_unlock();
 

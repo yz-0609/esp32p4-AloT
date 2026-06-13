@@ -1,6 +1,5 @@
-file(GLOB_RECURSE GUI_GUIDER_SRCS
-    "my_ui/generated/*.c"
-    "my_ui/custom/*.c"
+file(GLOB_RECURSE UI_SRCS
+    "ui/*.c"
 )
 
 idf_component_register(
@@ -8,14 +7,10 @@ idf_component_register(
         main.c
         app_wifi.c
         app_weather.c
-        ${GUI_GUIDER_SRCS}
+        ${UI_SRCS}
     INCLUDE_DIRS
         .
-        my_ui/generated
-        my_ui/generated/images
-        my_ui/generated/guider_fonts
-        my_ui/generated/guider_customer_fonts
-        my_ui/custom
+        ui
     REQUIRES
         esp_wifi
         esp_event
@@ -33,8 +28,6 @@ target_compile_options(
     ${COMPONENT_LIB}
     PRIVATE
         -DLV_LVGL_H_INCLUDE_SIMPLE
-        -DLV_USE_GUIDER_SIMULATOR=0
-        -DLV_USE_FREEMASTER=0
 )
 
 idf_component_get_property(LVGL_LIB lvgl__lvgl COMPONENT_LIB)
