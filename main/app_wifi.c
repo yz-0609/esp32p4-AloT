@@ -17,7 +17,7 @@
 #define APP_WIFI_SSID          "Lab107_AX6"
 #define APP_WIFI_PASSWORD      "lab120120."
 #define APP_WIFI_MAXIMUM_RETRY 10
-#define APP_TIME_PRINT_PERIOD_MS 3000
+#define APP_TIME_SYNC_RETRY_PERIOD_MS 3000
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
@@ -52,15 +52,6 @@ static void app_wifi_event_handler(void *arg, esp_event_base_t event_base, int32
         s_connected = true;
         ESP_LOGI(TAG, "Connected to %s, got IP: " IPSTR, APP_WIFI_SSID, IP2STR(&event->ip_info.ip));
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
-    }
-}
-
-static void app_time_print_now(void)
-{
-    char time_str[64] = {0};
-
-    if (app_wifi_format_time(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S") == ESP_OK) {
-        ESP_LOGI(TAG, "Network time: %s", time_str);
     }
 }
 
@@ -155,12 +146,11 @@ static void app_wifi_task(void *arg)
         ESP_LOGE(TAG, "Wi-Fi initialization/connect failed: %s", esp_err_to_name(ret));
     } else {
         while (app_time_sync() != ESP_OK) {
-            vTaskDelay(pdMS_TO_TICKS(APP_TIME_PRINT_PERIOD_MS));
+            vTaskDelay(pdMS_TO_TICKS(APP_TIME_SYNC_RETRY_PERIOD_MS));
         }
 
         while (true) {
-            app_time_print_now();
-            vTaskDelay(pdMS_TO_TICKS(APP_TIME_PRINT_PERIOD_MS));
+            vTaskDelay(pdMS_TO_TICKS(60000));
         }
     }
 

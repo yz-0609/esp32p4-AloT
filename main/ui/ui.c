@@ -186,6 +186,11 @@ static lv_obj_t *create_card(lv_obj_t *parent, int x, int y, int w, int h, bool 
 static lv_obj_t *create_label(lv_obj_t *parent, const char *text, int x, int y, int w, int h,
                               const lv_font_t *font, uint32_t color, lv_text_align_t align)
 {
+    int line_height = lv_font_get_line_height(font);
+    if (h < line_height) {
+        h = line_height;
+    }
+
     lv_obj_t *label = lv_label_create(parent);
     lv_obj_set_pos(label, x, y);
     lv_obj_set_size(label, w, h);
@@ -201,8 +206,11 @@ static lv_obj_t *create_label(lv_obj_t *parent, const char *text, int x, int y, 
 
 static lv_obj_t *create_pill(lv_obj_t *parent, const char *text, int x, int y, int w)
 {
-    lv_obj_t *pill = create_obj(parent, x, y, w, 28, &s_pill_style);
-    create_label(pill, text, 0, 5, w, 18, font_cn_16(), UI_ACCENT, LV_TEXT_ALIGN_CENTER);
+    const lv_font_t *font = font_cn_16();
+    int line_height = lv_font_get_line_height(font);
+    int pill_height = line_height + 10;
+    lv_obj_t *pill = create_obj(parent, x, y, w, pill_height, &s_pill_style);
+    create_label(pill, text, 0, (pill_height - line_height) / 2, w, line_height, font, UI_ACCENT, LV_TEXT_ALIGN_CENTER);
     return pill;
 }
 
@@ -211,7 +219,9 @@ static lv_obj_t *create_button(lv_obj_t *parent, const char *text, int x, int y,
 {
     lv_obj_t *button = create_obj(parent, x, y, w, h, active ? &s_button_active_style : &s_button_style);
     lv_obj_add_flag(button, LV_OBJ_FLAG_CLICKABLE);
-    create_label(button, text, 0, (h - 22) / 2, w, 22, font_cn_16(),
+    const lv_font_t *font = font_cn_16();
+    int line_height = lv_font_get_line_height(font);
+    create_label(button, text, 0, (h - line_height) / 2, w, line_height, font,
                  active ? UI_BG : UI_ACCENT, LV_TEXT_ALIGN_CENTER);
     if (cb != NULL) {
         lv_obj_add_event_cb(button, cb, LV_EVENT_CLICKED, user_data);
