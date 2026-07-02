@@ -5,6 +5,7 @@ file(GLOB_RECURSE UI_SRCS
 idf_component_register(
     SRCS
         main.c
+        app_relay.c
         app_wifi.c
         app_weather.c
         ${UI_SRCS}
@@ -21,6 +22,7 @@ idf_component_register(
         nvs_flash
     PRIV_REQUIRES
         bsp_extra
+        esp_driver_gpio
         waveshare__esp32_p4_wifi6_touch_lcd_4b
 )
 

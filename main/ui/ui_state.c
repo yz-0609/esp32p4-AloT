@@ -3,8 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "app_relay.h"
 #include "app_weather.h"
 #include "app_wifi.h"
+#include "esp_log.h"
+
+static const char *TAG = "ui_state";
 
 static int clamp_int(int value, int min_value, int max_value)
 {
@@ -48,6 +52,22 @@ static int calc_comfort(float temperature, int humidity, int light_lux, int air_
     return clamp_int(score, 0, 100);
 }
 
+static bool sync_relay_outputs(ui_state_t *state)
+{
+    if (state == NULL) {
+        return false;
+    }
+
+    esp_err_t ret = app_relay_set_all(state->relay_light_on, state->relay_fan_on);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "relay sync failed: %s", esp_err_to_name(ret));
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "Relay hardware update failed.");
+        return false;
+    }
+
+    return true;
+}
+
 void ui_state_init(ui_state_t *state)
 {
     if (state == NULL) {
@@ -76,6 +96,7 @@ void ui_state_init(ui_state_t *state)
     snprintf(state->ai_reply_text, sizeof(state->ai_reply_text),
              "Light is a little low. Keep the lamp on and fan in auto mode.");
     snprintf(state->last_feedback, sizeof(state->last_feedback), "UI ready. Local control is available.");
+    sync_relay_outputs(state);
 }
 
 void ui_state_poll_external(ui_state_t *state)
@@ -119,8 +140,10 @@ void ui_state_toggle_light(ui_state_t *state, ui_control_source_t source)
     state->relay_light_on = !state->relay_light_on;
     state->source = source;
     state->scene = UI_SCENE_MANUAL;
-    snprintf(state->last_feedback, sizeof(state->last_feedback), "Light relay switched %s by %s.",
-             ui_state_onoff(state->relay_light_on), ui_state_source_name(source));
+    if (sync_relay_outputs(state)) {
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "Light relay switched %s by %s.",
+                 ui_state_onoff(state->relay_light_on), ui_state_source_name(source));
+    }
 }
 
 void ui_state_toggle_fan(ui_state_t *state, ui_control_source_t source)
@@ -131,8 +154,10 @@ void ui_state_toggle_fan(ui_state_t *state, ui_control_source_t source)
     state->relay_fan_on = !state->relay_fan_on;
     state->source = source;
     state->scene = UI_SCENE_MANUAL;
-    snprintf(state->last_feedback, sizeof(state->last_feedback), "Vent relay switched %s by %s.",
-             ui_state_onoff(state->relay_fan_on), ui_state_source_name(source));
+    if (sync_relay_outputs(state)) {
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "Vent relay switched %s by %s.",
+                 ui_state_onoff(state->relay_fan_on), ui_state_source_name(source));
+    }
 }
 
 void ui_state_apply_scene(ui_state_t *state, ui_scene_t scene, ui_control_source_t source)
@@ -172,8 +197,10 @@ void ui_state_apply_scene(ui_state_t *state, ui_scene_t scene, ui_control_source
         break;
     }
 
-    snprintf(state->last_feedback, sizeof(state->last_feedback), "%s scene applied by %s.",
-             ui_state_scene_name(scene), ui_state_source_name(source));
+    if (sync_relay_outputs(state)) {
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "%s scene applied by %s.",
+                 ui_state_scene_name(scene), ui_state_source_name(source));
+    }
 }
 
 void ui_state_apply_ai_suggestion(ui_state_t *state)
@@ -189,7 +216,9 @@ void ui_state_apply_ai_suggestion(ui_state_t *state)
     snprintf(state->ai_user_text, sizeof(state->ai_user_text), "Make the room suitable for study.");
     snprintf(state->ai_reply_text, sizeof(state->ai_reply_text),
              "Applied study mode. Light is on and ventilation follows local comfort rules.");
-    snprintf(state->last_feedback, sizeof(state->last_feedback), "AI command passed local safety checks.");
+    if (sync_relay_outputs(state)) {
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "AI command passed local safety checks.");
+    }
 }
 
 void ui_state_adjust_volume(ui_state_t *state, int delta)

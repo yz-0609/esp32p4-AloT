@@ -3,6 +3,7 @@
 #include "bsp/esp-bsp.h"
 #include "bsp/display.h"
 #include "lvgl.h"
+#include "app_relay.h"
 #include "app_wifi.h"
 #include "app_weather.h"
 #include "ui.h"
@@ -20,6 +21,7 @@ static void app_nvs_init(void)
 void app_main(void)
 {
     app_nvs_init();
+    ESP_ERROR_CHECK(app_relay_init());
 
     bsp_display_cfg_t cfg = {
         .lvgl_port_cfg = ESP_LVGL_PORT_INIT_CONFIG(),
