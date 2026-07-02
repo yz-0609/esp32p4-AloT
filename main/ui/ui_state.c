@@ -6,6 +6,7 @@
 #include "app_relay.h"
 #include "app_weather.h"
 #include "app_wifi.h"
+#include "bsp/display.h"
 #include "esp_log.h"
 
 static const char *TAG = "ui_state";
@@ -68,6 +69,22 @@ static bool sync_relay_outputs(ui_state_t *state)
     return true;
 }
 
+static bool sync_screen_brightness(ui_state_t *state)
+{
+    if (state == NULL) {
+        return false;
+    }
+
+    esp_err_t ret = bsp_display_brightness_set(state->screen_brightness);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "screen brightness sync failed: %s", esp_err_to_name(ret));
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "屏幕亮度硬件更新失败。");
+        return false;
+    }
+
+    return true;
+}
+
 void ui_state_init(ui_state_t *state)
 {
     if (state == NULL) {
@@ -97,6 +114,7 @@ void ui_state_init(ui_state_t *state)
              "光照略低，保持灯光开启，通风按本地舒适度规则自动调节。");
     snprintf(state->last_feedback, sizeof(state->last_feedback), "UI 已就绪，本地控制可用。");
     sync_relay_outputs(state);
+    sync_screen_brightness(state);
 }
 
 void ui_state_poll_external(ui_state_t *state)
@@ -236,7 +254,9 @@ void ui_state_adjust_brightness(ui_state_t *state, int delta)
         return;
     }
     state->screen_brightness = clamp_int(state->screen_brightness + delta, 0, 100);
-    snprintf(state->last_feedback, sizeof(state->last_feedback), "屏幕亮度已设置为 %d%%。", state->screen_brightness);
+    if (sync_screen_brightness(state)) {
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "屏幕亮度已设置为 %d%%。", state->screen_brightness);
+    }
 }
 
 const char *ui_state_scene_name(ui_scene_t scene)
