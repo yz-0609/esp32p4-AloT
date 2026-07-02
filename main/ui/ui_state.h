@@ -48,9 +48,9 @@ typedef struct {
 
     char time_text[16];
     char date_text[32];
-    char ai_user_text[96];
-    char ai_reply_text[160];
-    char last_feedback[96];
+    char ai_user_text[128];
+    char ai_reply_text[240];
+    char last_feedback[160];
 } ui_state_t;
 
 void ui_state_init(ui_state_t *state);

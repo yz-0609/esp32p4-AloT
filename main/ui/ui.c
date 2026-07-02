@@ -57,16 +57,18 @@ static lv_style_t s_nav_style;
 static lv_style_t s_nav_active_style;
 static bool s_styles_ready;
 
+LV_FONT_DECLARE(ui_font_cn_16)
+
 static void ui_open_page(ui_page_t page);
 
 static const lv_font_t *font_cn_16(void)
 {
-    return &lv_font_montserrat_18;
+    return &ui_font_cn_16;
 }
 
 static const lv_font_t *font_cn_24(void)
 {
-    return &lv_font_montserrat_24;
+    return &ui_font_cn_16;
 }
 
 static void style_init_once(void)
@@ -200,7 +202,7 @@ static lv_obj_t *create_label(lv_obj_t *parent, const char *text, int x, int y, 
 static lv_obj_t *create_pill(lv_obj_t *parent, const char *text, int x, int y, int w)
 {
     lv_obj_t *pill = create_obj(parent, x, y, w, 28, &s_pill_style);
-    create_label(pill, text, 0, 5, w, 18, &lv_font_montserrat_14, UI_ACCENT, LV_TEXT_ALIGN_CENTER);
+    create_label(pill, text, 0, 5, w, 18, font_cn_16(), UI_ACCENT, LV_TEXT_ALIGN_CENTER);
     return pill;
 }
 
@@ -312,7 +314,7 @@ static void create_topbar(lv_obj_t *screen, const char *title, const char *subti
     lv_obj_set_style_radius(logo, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     create_label(logo, "P4", 0, 10, 44, 22, &lv_font_montserrat_18, UI_ACCENT, LV_TEXT_ALIGN_CENTER);
     create_label(screen, title, 90, 22, 330, 28, font_cn_24(), UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(screen, subtitle, 90, 54, 330, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(screen, subtitle, 90, 54, 380, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.wifi_pill = create_pill(screen, status, 560, 24, 126);
     lv_obj_t *line = create_obj(screen, 32, 82, 656, 2, NULL);
     lv_obj_set_style_bg_color(line, lv_color_hex(UI_MUTED), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -322,7 +324,7 @@ static void create_topbar(lv_obj_t *screen, const char *title, const char *subti
 
 static void create_navbar(lv_obj_t *screen, ui_page_t active)
 {
-    static const char *labels[UI_PAGE_COUNT] = {"HOME", "CTRL", "ENV", "SCENE", "AI", "SET"};
+    static const char *labels[UI_PAGE_COUNT] = {"首页", "控制", "环境", "场景", "AI", "设置"};
 
     lv_obj_t *line = create_obj(screen, 32, 638, 656, 2, NULL);
     lv_obj_set_style_bg_color(line, lv_color_hex(UI_MUTED), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -334,7 +336,7 @@ static void create_navbar(lv_obj_t *screen, ui_page_t active)
         bool selected = (ui_page_t)i == active;
         lv_obj_t *nav = create_obj(screen, x, 654, 94, 42, selected ? &s_nav_active_style : &s_nav_style);
         lv_obj_add_flag(nav, LV_OBJ_FLAG_CLICKABLE);
-        create_label(nav, labels[i], 0, 12, 94, 18, &lv_font_montserrat_14,
+        create_label(nav, labels[i], 0, 12, 94, 18, font_cn_16(),
                      selected ? UI_BG : UI_MUTED, LV_TEXT_ALIGN_CENTER);
         lv_obj_add_event_cb(nav, nav_event_cb, LV_EVENT_CLICKED, (void *)(intptr_t)i);
     }
@@ -351,20 +353,20 @@ static void refresh_dynamic_labels(void)
         lv_label_set_text(s_ui.date_label, s_ui.state.date_text);
     }
     if (s_ui.standby_status_label != NULL) {
-        const char *status = "Connecting network";
+        const char *status = "正在连接网络";
         if (s_ui.state.time_synced) {
-            status = "Time ready";
+            status = "时间已同步";
         } else if (s_ui.state.wifi_connected) {
-            status = "Syncing time";
+            status = "正在同步时间";
         }
         lv_label_set_text(s_ui.standby_status_label, status);
     }
     if (s_ui.standby_detail_label != NULL) {
-        const char *detail = "Starting Wi-Fi remote and waiting for SNTP.";
+        const char *detail = "正在启动 Wi-Fi 远程链路并等待 SNTP。";
         if (s_ui.state.time_synced) {
-            detail = "Opening HOME.";
+            detail = "即将进入首页。";
         } else if (s_ui.state.wifi_connected) {
-            detail = "Network online. Waiting for accurate local time.";
+            detail = "网络已连接，等待本地时间校准。";
         }
         lv_label_set_text(s_ui.standby_detail_label, detail);
     }
@@ -408,22 +410,22 @@ static void refresh_dynamic_labels(void)
 static void create_footer_feedback(lv_obj_t *screen)
 {
     lv_obj_t *card = create_card(screen, 32, 566, 656, 48, false);
-    create_label(card, "Feedback", 18, 15, 94, 18, &lv_font_montserrat_14, UI_ACCENT, LV_TEXT_ALIGN_LEFT);
-    s_ui.feedback_label = create_label(card, s_ui.state.last_feedback, 118, 15, 510, 18,
-                                       &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(card, "反馈", 18, 15, 94, 18, font_cn_16(), UI_ACCENT, LV_TEXT_ALIGN_LEFT);
+    s_ui.feedback_label = create_label(card, s_ui.state.last_feedback, 96, 15, 532, 18,
+                                       font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
 }
 
 static lv_obj_t *build_standby_page(void)
 {
     lv_obj_t *screen = create_screen();
-    create_topbar(screen, "Starting", "NETWORK / SNTP / LOCAL TIME", s_ui.state.wifi_connected ? "ONLINE" : "LOCAL");
+    create_topbar(screen, "启动中", "网络 / SNTP / 本地时间", s_ui.state.wifi_connected ? "ONLINE" : "LOCAL");
 
     lv_obj_t *panel = create_card(screen, 110, 202, 500, 276, true);
     create_label(panel, "P4", 0, 44, 500, 50, &lv_font_montserrat_44, UI_ACCENT, LV_TEXT_ALIGN_CENTER);
-    s_ui.standby_status_label = create_label(panel, "Connecting network", 0, 126, 500, 32,
-                                             &lv_font_montserrat_24, UI_INK, LV_TEXT_ALIGN_CENTER);
-    s_ui.standby_detail_label = create_label(panel, "Starting Wi-Fi remote and waiting for SNTP.",
-                                             50, 176, 400, 20, &lv_font_montserrat_14,
+    s_ui.standby_status_label = create_label(panel, "正在连接网络", 0, 126, 500, 32,
+                                             font_cn_24(), UI_INK, LV_TEXT_ALIGN_CENTER);
+    s_ui.standby_detail_label = create_label(panel, "正在启动 Wi-Fi 远程链路并等待 SNTP。",
+                                             50, 176, 400, 20, font_cn_16(),
                                              UI_MUTED, LV_TEXT_ALIGN_CENTER);
 
     create_pill(panel, "BOOT", 100, 224, 84);
@@ -442,53 +444,53 @@ static lv_obj_t *build_standby_page(void)
 static lv_obj_t *build_home_page(void)
 {
     lv_obj_t *screen = create_screen();
-    create_topbar(screen, "HOME", "STATUS / QUICK ACTIONS", s_ui.state.wifi_connected ? "ONLINE" : "LOCAL");
+    create_topbar(screen, "首页", "状态 / 快捷操作", s_ui.state.wifi_connected ? "ONLINE" : "LOCAL");
 
     lv_obj_t *time_card = create_card(screen, 32, 112, 314, 150, true);
-    create_label(time_card, "LOCAL TIME", 24, 18, 150, 18, &lv_font_montserrat_14, UI_ACCENT, LV_TEXT_ALIGN_LEFT);
+    create_label(time_card, "本地时间", 24, 18, 150, 18, font_cn_16(), UI_ACCENT, LV_TEXT_ALIGN_LEFT);
     s_ui.time_label = create_label(time_card, s_ui.state.time_text, 24, 48, 210, 50,
                                    &lv_font_montserrat_44, UI_INK, LV_TEXT_ALIGN_LEFT);
     s_ui.date_label = create_label(time_card, s_ui.state.date_text, 24, 106, 210, 18,
                                    &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
 
     lv_obj_t *assistant = create_card(screen, 370, 112, 318, 150, false);
-    create_label(assistant, "Assistant", 24, 22, 160, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(assistant, s_ui.state.voice_ready ? "Voice ready / Touch active" : "Touch active",
-                 24, 58, 230, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(assistant, "AI 助手", 24, 22, 160, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(assistant, s_ui.state.voice_ready ? "语音就绪 / 触控可用" : "触控可用",
+                 24, 58, 230, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     create_pill(assistant, "MIC", 24, 102, 66);
     create_pill(assistant, "LLM", 106, 102, 66);
     create_pill(assistant, "TTS", 188, 102, 66);
 
     lv_obj_t *temp = create_card(screen, 32, 286, 150, 112, false);
-    create_label(temp, "Temp", 18, 18, 90, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(temp, "温度", 18, 18, 90, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.temp_value = create_label(temp, "0.0 C", 18, 50, 112, 34, &lv_font_montserrat_30, UI_INK, LV_TEXT_ALIGN_LEFT);
 
     lv_obj_t *hum = create_card(screen, 198, 286, 150, 112, false);
-    create_label(hum, "Humidity", 18, 18, 100, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(hum, "湿度", 18, 18, 100, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.humidity_value = create_label(hum, "0 %", 18, 50, 112, 34, &lv_font_montserrat_30, UI_INK, LV_TEXT_ALIGN_LEFT);
 
     lv_obj_t *lux = create_card(screen, 364, 286, 150, 112, false);
-    create_label(lux, "Light", 18, 18, 90, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(lux, "光照", 18, 18, 90, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.lux_value = create_label(lux, "0 lx", 18, 50, 112, 34, &lv_font_montserrat_30, UI_INK, LV_TEXT_ALIGN_LEFT);
 
     lv_obj_t *air = create_card(screen, 530, 286, 158, 112, false);
-    create_label(air, "Air", 18, 18, 90, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(air, "空气", 18, 18, 90, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.air_value = create_label(air, "0", 18, 50, 112, 34, &lv_font_montserrat_30, UI_INK, LV_TEXT_ALIGN_LEFT);
 
     lv_obj_t *device = create_card(screen, 32, 424, 314, 118, false);
-    create_label(device, "Device", 20, 18, 116, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(device, "Light", 20, 58, 80, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(device, "设备", 20, 18, 116, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(device, "灯光", 20, 58, 80, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.light_value = create_label(device, ui_state_onoff(s_ui.state.relay_light_on), 224, 56, 56, 20,
                                     &lv_font_montserrat_14, UI_ACCENT, LV_TEXT_ALIGN_CENTER);
-    create_label(device, "Vent", 20, 86, 80, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(device, "通风", 20, 86, 80, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.fan_value = create_label(device, ui_state_onoff(s_ui.state.relay_fan_on), 224, 84, 56, 20,
                                   &lv_font_montserrat_14, UI_ACCENT, LV_TEXT_ALIGN_CENTER);
 
     lv_obj_t *quick = create_card(screen, 370, 424, 318, 118, false);
-    create_label(quick, "Quick scene", 20, 18, 160, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_button(quick, "Study", 20, 58, 82, 42, true, scene_event_cb, (void *)(intptr_t)UI_SCENE_STUDY);
-    create_button(quick, "Away", 118, 58, 82, 42, false, scene_event_cb, (void *)(intptr_t)UI_SCENE_AWAY);
-    create_button(quick, "Auto", 216, 58, 76, 42, false, scene_event_cb, (void *)(intptr_t)UI_SCENE_AUTO);
+    create_label(quick, "快捷场景", 20, 18, 160, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_button(quick, "学习", 20, 58, 82, 42, true, scene_event_cb, (void *)(intptr_t)UI_SCENE_STUDY);
+    create_button(quick, "离家", 118, 58, 82, 42, false, scene_event_cb, (void *)(intptr_t)UI_SCENE_AWAY);
+    create_button(quick, "自动", 216, 58, 76, 42, false, scene_event_cb, (void *)(intptr_t)UI_SCENE_AUTO);
 
     create_footer_feedback(screen);
     create_navbar(screen, UI_PAGE_HOME);
@@ -499,34 +501,34 @@ static lv_obj_t *build_home_page(void)
 static lv_obj_t *build_control_page(void)
 {
     lv_obj_t *screen = create_screen();
-    create_topbar(screen, "Control", "RELAY / MANUAL CONTROL", ui_state_scene_name(s_ui.state.scene));
+    create_topbar(screen, "控制", "继电器 / 手动控制", ui_state_scene_name(s_ui.state.scene));
 
     lv_obj_t *light = create_card(screen, 32, 112, 314, 232, true);
-    create_label(light, "Light relay", 26, 24, 160, 24, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(light, "Relay 1 / Lamp", 26, 62, 160, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(light, "灯光继电器", 26, 24, 160, 24, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(light, "继电器 1 / 灯具", 26, 62, 180, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.light_value = create_label(light, ui_state_onoff(s_ui.state.relay_light_on), 26, 108, 130, 40,
                                     &lv_font_montserrat_32, UI_INK, LV_TEXT_ALIGN_LEFT);
     create_switch_view(light, 198, 108, s_ui.state.relay_light_on, light_event_cb, NULL);
     create_label(light, ui_state_source_name(s_ui.state.source), 26, 178, 220, 18,
-                 &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+                 font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
 
     lv_obj_t *fan = create_card(screen, 374, 112, 314, 232, false);
-    create_label(fan, "Vent relay", 26, 24, 160, 24, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(fan, "Relay 2 / Fan", 26, 62, 160, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(fan, "通风继电器", 26, 24, 160, 24, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(fan, "继电器 2 / 风扇", 26, 62, 180, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.fan_value = create_label(fan, ui_state_onoff(s_ui.state.relay_fan_on), 26, 108, 130, 40,
                                   &lv_font_montserrat_32, UI_INK, LV_TEXT_ALIGN_LEFT);
     create_switch_view(fan, 198, 108, s_ui.state.relay_fan_on, fan_event_cb, NULL);
     create_label(fan, ui_state_source_name(s_ui.state.source), 26, 178, 220, 18,
-                 &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+                 font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
 
     lv_obj_t *feedback = create_card(screen, 32, 372, 656, 98, false);
-    create_label(feedback, "Execution", 24, 22, 140, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(feedback, "执行反馈", 24, 22, 140, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
     s_ui.feedback_label = create_label(feedback, s_ui.state.last_feedback, 24, 58, 560, 20,
-                                       &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+                                       font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
 
-    create_button(screen, "Study", 32, 500, 198, 46, true, scene_event_cb, (void *)(intptr_t)UI_SCENE_STUDY);
-    create_button(screen, "Away", 260, 500, 198, 46, false, scene_event_cb, (void *)(intptr_t)UI_SCENE_AWAY);
-    create_button(screen, "AI advice", 490, 500, 198, 46, false, ai_event_cb, NULL);
+    create_button(screen, "学习", 32, 500, 198, 46, true, scene_event_cb, (void *)(intptr_t)UI_SCENE_STUDY);
+    create_button(screen, "离家", 260, 500, 198, 46, false, scene_event_cb, (void *)(intptr_t)UI_SCENE_AWAY);
+    create_button(screen, "AI 建议", 490, 500, 198, 46, false, ai_event_cb, NULL);
 
     create_navbar(screen, UI_PAGE_CONTROL);
     refresh_dynamic_labels();
@@ -536,37 +538,37 @@ static lv_obj_t *build_control_page(void)
 static lv_obj_t *build_env_page(void)
 {
     lv_obj_t *screen = create_screen();
-    create_topbar(screen, "Environment", "SENSOR / COMFORT", s_ui.state.sensor_online ? "SENSOR" : "LOCAL");
+    create_topbar(screen, "环境", "传感器 / 舒适度", s_ui.state.sensor_online ? "SENSOR" : "LOCAL");
 
     lv_obj_t *comfort = create_card(screen, 32, 112, 656, 112, true);
-    create_label(comfort, "Comfort score", 26, 22, 180, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(comfort, "舒适度评分", 26, 22, 180, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
     s_ui.comfort_value = create_label(comfort, "0", 26, 54, 70, 40, &lv_font_montserrat_32, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(comfort, "Local rule result for study environment", 112, 64, 360, 18,
-                 &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(comfort, "基于温湿度、光照和空气质量的本地规则", 112, 64, 390, 18,
+                 font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     create_pill(comfort, s_ui.state.comfort_score > 75 ? "GOOD" : "CHECK", 538, 42, 76);
 
     lv_obj_t *temp = create_card(screen, 32, 250, 314, 130, false);
-    create_label(temp, "Temperature / Humidity", 22, 22, 220, 20, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(temp, "温度 / 湿度", 22, 22, 220, 20, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.temp_value = create_label(temp, "0.0 C", 22, 54, 130, 34, &lv_font_montserrat_30, UI_INK, LV_TEXT_ALIGN_LEFT);
     s_ui.humidity_value = create_label(temp, "0 %", 170, 54, 110, 34, &lv_font_montserrat_30, UI_INK, LV_TEXT_ALIGN_LEFT);
     create_meter(temp, 22, 104, 250, s_ui.state.humidity);
 
     lv_obj_t *light = create_card(screen, 374, 250, 314, 130, false);
-    create_label(light, "Light level", 22, 22, 220, 20, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(light, "光照强度", 22, 22, 220, 20, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.lux_value = create_label(light, "0 lx", 22, 54, 160, 34, &lv_font_montserrat_30, UI_INK, LV_TEXT_ALIGN_LEFT);
     create_meter(light, 22, 104, 250, s_ui.state.light_lux > 600 ? 100 : s_ui.state.light_lux / 6);
 
     lv_obj_t *air = create_card(screen, 32, 408, 314, 130, false);
-    create_label(air, "Air quality", 22, 22, 220, 20, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(air, "空气质量", 22, 22, 220, 20, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     s_ui.air_value = create_label(air, "0", 22, 54, 160, 34, &lv_font_montserrat_30, UI_INK, LV_TEXT_ALIGN_LEFT);
     create_meter(air, 22, 104, 250, s_ui.state.air_quality);
 
     lv_obj_t *sensor = create_card(screen, 374, 408, 314, 130, false);
-    create_label(sensor, "Sensor link", 22, 22, 220, 20, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(sensor, "传感器链路", 22, 22, 220, 20, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     create_label(sensor, s_ui.state.sensor_online ? "ONLINE" : "SIM DATA", 22, 58, 160, 28,
                  &lv_font_montserrat_24, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(sensor, "RS485 target / 1s refresh", 22, 100, 220, 18,
-                 &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(sensor, "RS485 目标 / 1 秒刷新", 22, 100, 220, 18,
+                 font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
 
     create_navbar(screen, UI_PAGE_ENV);
     refresh_dynamic_labels();
@@ -576,31 +578,31 @@ static lv_obj_t *build_env_page(void)
 static lv_obj_t *build_scene_page(void)
 {
     lv_obj_t *screen = create_screen();
-    create_topbar(screen, "Scene Mode", "SCENE / TIMER / AUTO RULE", ui_state_scene_name(s_ui.state.scene));
+    create_topbar(screen, "场景模式", "场景 / 定时 / 自动规则", ui_state_scene_name(s_ui.state.scene));
 
     lv_obj_t *current = create_card(screen, 32, 112, 656, 108, true);
-    create_label(current, "Current scene", 26, 22, 180, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(current, "当前场景", 26, 22, 180, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
     create_label(current, ui_state_scene_name(s_ui.state.scene), 26, 56, 180, 34,
-                 &lv_font_montserrat_30, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(current, "Scene updates relays and feeds HOME/control pages.", 242, 60, 360, 18,
-                 &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+                 font_cn_24(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(current, "场景会同步继电器，并更新首页与控制页状态。", 242, 60, 380, 18,
+                 font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
 
-    create_button(screen, "Study", 32, 250, 198, 76, s_ui.state.scene == UI_SCENE_STUDY,
+    create_button(screen, "学习", 32, 250, 198, 76, s_ui.state.scene == UI_SCENE_STUDY,
                   scene_event_cb, (void *)(intptr_t)UI_SCENE_STUDY);
-    create_button(screen, "Rest", 260, 250, 198, 76, s_ui.state.scene == UI_SCENE_REST,
+    create_button(screen, "休息", 260, 250, 198, 76, s_ui.state.scene == UI_SCENE_REST,
                   scene_event_cb, (void *)(intptr_t)UI_SCENE_REST);
-    create_button(screen, "Away", 490, 250, 198, 76, s_ui.state.scene == UI_SCENE_AWAY,
+    create_button(screen, "离家", 490, 250, 198, 76, s_ui.state.scene == UI_SCENE_AWAY,
                   scene_event_cb, (void *)(intptr_t)UI_SCENE_AWAY);
-    create_button(screen, "Auto", 32, 352, 198, 76, s_ui.state.scene == UI_SCENE_AUTO,
+    create_button(screen, "自动", 32, 352, 198, 76, s_ui.state.scene == UI_SCENE_AUTO,
                   scene_event_cb, (void *)(intptr_t)UI_SCENE_AUTO);
-    create_button(screen, "Manual", 260, 352, 198, 76, s_ui.state.scene == UI_SCENE_MANUAL,
+    create_button(screen, "手动", 260, 352, 198, 76, s_ui.state.scene == UI_SCENE_MANUAL,
                   scene_event_cb, (void *)(intptr_t)UI_SCENE_MANUAL);
-    create_button(screen, "Timer", 490, 352, 198, 76, s_ui.state.scene == UI_SCENE_TIMER,
+    create_button(screen, "定时", 490, 352, 198, 76, s_ui.state.scene == UI_SCENE_TIMER,
                   scene_event_cb, (void *)(intptr_t)UI_SCENE_TIMER);
 
     lv_obj_t *preview = create_card(screen, 32, 462, 656, 82, false);
-    create_label(preview, "Action preview", 24, 18, 160, 20, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(preview, s_ui.state.last_feedback, 24, 48, 560, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(preview, "动作预览", 24, 18, 160, 20, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(preview, s_ui.state.last_feedback, 24, 48, 560, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
 
     create_navbar(screen, UI_PAGE_SCENE);
     return screen;
@@ -609,29 +611,29 @@ static lv_obj_t *build_scene_page(void)
 static lv_obj_t *build_ai_page(void)
 {
     lv_obj_t *screen = create_screen();
-    create_topbar(screen, "AI Assistant", "ASR / LLM / COMMAND CHECK", s_ui.state.ai_connected ? "READY" : "LOCAL");
+    create_topbar(screen, "AI 助手", "语音识别 / LLM / 指令校验", s_ui.state.ai_connected ? "READY" : "LOCAL");
 
     lv_obj_t *user = create_card(screen, 32, 112, 656, 86, false);
-    create_label(user, "User voice", 24, 16, 130, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
-    create_label(user, s_ui.state.ai_user_text, 24, 44, 580, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(user, "用户语音", 24, 16, 130, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(user, s_ui.state.ai_user_text, 24, 44, 580, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
 
     lv_obj_t *reply = create_card(screen, 32, 222, 656, 128, true);
-    create_label(reply, "LLM reply", 24, 18, 130, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
-    create_label(reply, s_ui.state.ai_reply_text, 24, 48, 580, 52, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(reply, "LLM 回复", 24, 18, 130, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(reply, s_ui.state.ai_reply_text, 24, 48, 580, 52, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
 
     lv_obj_t *strategy = create_card(screen, 32, 378, 314, 146, false);
-    create_label(strategy, "Strategy", 24, 20, 140, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(strategy, "执行策略", 24, 20, 140, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
     create_label(strategy, "relay_1: ON", 24, 62, 140, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
     create_label(strategy, s_ui.state.temperature > 28.0f ? "relay_2: ON" : "relay_2: KEEP",
                  24, 92, 160, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
 
     lv_obj_t *check = create_card(screen, 374, 378, 314, 146, false);
-    create_label(check, "Safety check", 24, 20, 160, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(check, "Whitelist: PASS", 24, 62, 180, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
-    create_label(check, "Relay interval: PASS", 24, 92, 200, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(check, "安全检查", 24, 20, 160, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(check, "白名单：PASS", 24, 62, 180, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(check, "继电器间隔：PASS", 24, 92, 200, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     create_pill(check, "SAFE", 218, 78, 70);
 
-    create_button(screen, "Apply AI", 260, 542, 198, 46, true, ai_event_cb, NULL);
+    create_button(screen, "应用 AI", 260, 542, 198, 46, true, ai_event_cb, NULL);
     create_navbar(screen, UI_PAGE_AI);
     return screen;
 }
@@ -640,25 +642,25 @@ static lv_obj_t *build_settings_page(void)
 {
     char buffer[48];
     lv_obj_t *screen = create_screen();
-    create_topbar(screen, "Settings", "NETWORK / AUDIO / DEVICE", "SET");
+    create_topbar(screen, "设置", "网络 / 音频 / 设备", "SET");
 
     lv_obj_t *network = create_card(screen, 32, 112, 314, 128, true);
-    create_label(network, "Network", 22, 20, 130, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
-    create_label(network, s_ui.state.wifi_connected ? "Wi-Fi connected" : "Offline local mode",
-                 22, 58, 220, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(network, "网络", 22, 20, 130, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(network, s_ui.state.wifi_connected ? "Wi-Fi 已连接" : "离线本地模式",
+                 22, 58, 220, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     create_pill(network, s_ui.state.wifi_connected ? "OK" : "LOCAL", 218, 20, 70);
 
     lv_obj_t *audio = create_card(screen, 374, 112, 314, 128, false);
-    create_label(audio, "Audio", 22, 20, 130, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
-    snprintf(buffer, sizeof(buffer), "Volume %d%%", s_ui.state.volume);
-    create_label(audio, buffer, 22, 58, 130, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(audio, "音频", 22, 20, 130, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    snprintf(buffer, sizeof(buffer), "音量 %d%%", s_ui.state.volume);
+    create_label(audio, buffer, 22, 58, 130, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     create_button(audio, "-", 178, 48, 44, 36, false, setting_event_cb, (void *)(intptr_t)-1);
     create_button(audio, "+", 236, 48, 44, 36, false, setting_event_cb, (void *)(intptr_t)1);
 
     lv_obj_t *screen_cfg = create_card(screen, 32, 266, 314, 128, false);
-    create_label(screen_cfg, "Screen", 22, 20, 130, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
-    snprintf(buffer, sizeof(buffer), "Brightness %d%%", s_ui.state.screen_brightness);
-    create_label(screen_cfg, buffer, 22, 58, 150, 18, &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
+    create_label(screen_cfg, "屏幕", 22, 20, 130, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
+    snprintf(buffer, sizeof(buffer), "亮度 %d%%", s_ui.state.screen_brightness);
+    create_label(screen_cfg, buffer, 22, 58, 150, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     create_button(screen_cfg, "-", 178, 48, 44, 36, false, setting_event_cb, (void *)(intptr_t)-2);
     create_button(screen_cfg, "+", 236, 48, 44, 36, false, setting_event_cb, (void *)(intptr_t)2);
 
@@ -669,7 +671,7 @@ static lv_obj_t *build_settings_page(void)
     create_pill(rs485, "MODBUS", 198, 20, 90);
 
     lv_obj_t *info = create_card(screen, 32, 420, 656, 112, false);
-    create_label(info, "System", 22, 20, 130, 22, &lv_font_montserrat_18, UI_INK, LV_TEXT_ALIGN_LEFT);
+    create_label(info, "系统", 22, 20, 130, 22, font_cn_16(), UI_INK, LV_TEXT_ALIGN_LEFT);
     create_label(info, "ESP32-P4 / LVGL / 720x720 / PSRAM double buffer", 22, 58, 520, 18,
                  &lv_font_montserrat_14, UI_MUTED, LV_TEXT_ALIGN_LEFT);
     create_pill(info, "OTA", 548, 42, 70);

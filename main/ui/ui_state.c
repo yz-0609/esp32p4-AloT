@@ -61,7 +61,7 @@ static bool sync_relay_outputs(ui_state_t *state)
     esp_err_t ret = app_relay_set_all(state->relay_light_on, state->relay_fan_on);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "relay sync failed: %s", esp_err_to_name(ret));
-        snprintf(state->last_feedback, sizeof(state->last_feedback), "Relay hardware update failed.");
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "继电器硬件更新失败。");
         return false;
     }
 
@@ -92,10 +92,10 @@ void ui_state_init(ui_state_t *state)
     state->focus_minutes = 24;
     snprintf(state->time_text, sizeof(state->time_text), "08:30:00");
     snprintf(state->date_text, sizeof(state->date_text), "2026/06/13");
-    snprintf(state->ai_user_text, sizeof(state->ai_user_text), "Adjust room for study.");
+    snprintf(state->ai_user_text, sizeof(state->ai_user_text), "把房间调整为适合学习。");
     snprintf(state->ai_reply_text, sizeof(state->ai_reply_text),
-             "Light is a little low. Keep the lamp on and fan in auto mode.");
-    snprintf(state->last_feedback, sizeof(state->last_feedback), "UI ready. Local control is available.");
+             "光照略低，保持灯光开启，通风按本地舒适度规则自动调节。");
+    snprintf(state->last_feedback, sizeof(state->last_feedback), "UI 已就绪，本地控制可用。");
     sync_relay_outputs(state);
 }
 
@@ -141,7 +141,7 @@ void ui_state_toggle_light(ui_state_t *state, ui_control_source_t source)
     state->source = source;
     state->scene = UI_SCENE_MANUAL;
     if (sync_relay_outputs(state)) {
-        snprintf(state->last_feedback, sizeof(state->last_feedback), "Light relay switched %s by %s.",
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "灯光继电器已切换为 %s，来源：%s。",
                  ui_state_onoff(state->relay_light_on), ui_state_source_name(source));
     }
 }
@@ -155,7 +155,7 @@ void ui_state_toggle_fan(ui_state_t *state, ui_control_source_t source)
     state->source = source;
     state->scene = UI_SCENE_MANUAL;
     if (sync_relay_outputs(state)) {
-        snprintf(state->last_feedback, sizeof(state->last_feedback), "Vent relay switched %s by %s.",
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "通风继电器已切换为 %s，来源：%s。",
                  ui_state_onoff(state->relay_fan_on), ui_state_source_name(source));
     }
 }
@@ -198,7 +198,7 @@ void ui_state_apply_scene(ui_state_t *state, ui_scene_t scene, ui_control_source
     }
 
     if (sync_relay_outputs(state)) {
-        snprintf(state->last_feedback, sizeof(state->last_feedback), "%s scene applied by %s.",
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "已应用%s场景，来源：%s。",
                  ui_state_scene_name(scene), ui_state_source_name(source));
     }
 }
@@ -213,11 +213,11 @@ void ui_state_apply_ai_suggestion(ui_state_t *state)
     state->relay_fan_on = state->temperature > 28.0f || state->air_quality < 75;
     state->scene = UI_SCENE_STUDY;
     state->source = UI_SOURCE_AI;
-    snprintf(state->ai_user_text, sizeof(state->ai_user_text), "Make the room suitable for study.");
+    snprintf(state->ai_user_text, sizeof(state->ai_user_text), "让房间适合学习。");
     snprintf(state->ai_reply_text, sizeof(state->ai_reply_text),
-             "Applied study mode. Light is on and ventilation follows local comfort rules.");
+             "已应用学习模式：灯光开启，通风按本地舒适度规则运行。");
     if (sync_relay_outputs(state)) {
-        snprintf(state->last_feedback, sizeof(state->last_feedback), "AI command passed local safety checks.");
+        snprintf(state->last_feedback, sizeof(state->last_feedback), "AI 指令已通过本地安全检查。");
     }
 }
 
@@ -227,7 +227,7 @@ void ui_state_adjust_volume(ui_state_t *state, int delta)
         return;
     }
     state->volume = clamp_int(state->volume + delta, 0, 100);
-    snprintf(state->last_feedback, sizeof(state->last_feedback), "Volume set to %d%%.", state->volume);
+    snprintf(state->last_feedback, sizeof(state->last_feedback), "音量已设置为 %d%%。", state->volume);
 }
 
 void ui_state_adjust_brightness(ui_state_t *state, int delta)
@@ -236,25 +236,25 @@ void ui_state_adjust_brightness(ui_state_t *state, int delta)
         return;
     }
     state->screen_brightness = clamp_int(state->screen_brightness + delta, 0, 100);
-    snprintf(state->last_feedback, sizeof(state->last_feedback), "Brightness set to %d%%.", state->screen_brightness);
+    snprintf(state->last_feedback, sizeof(state->last_feedback), "屏幕亮度已设置为 %d%%。", state->screen_brightness);
 }
 
 const char *ui_state_scene_name(ui_scene_t scene)
 {
     switch (scene) {
     case UI_SCENE_STUDY:
-        return "Study";
+        return "学习";
     case UI_SCENE_REST:
-        return "Rest";
+        return "休息";
     case UI_SCENE_AWAY:
-        return "Away";
+        return "离家";
     case UI_SCENE_AUTO:
-        return "Auto";
+        return "自动";
     case UI_SCENE_TIMER:
-        return "Timer";
+        return "定时";
     case UI_SCENE_MANUAL:
     default:
-        return "Manual";
+        return "手动";
     }
 }
 
@@ -262,16 +262,16 @@ const char *ui_state_source_name(ui_control_source_t source)
 {
     switch (source) {
     case UI_SOURCE_GUI:
-        return "GUI";
+        return "触控";
     case UI_SOURCE_VOICE:
-        return "Voice";
+        return "语音";
     case UI_SOURCE_RULE:
-        return "Rule";
+        return "规则";
     case UI_SOURCE_AI:
         return "AI";
     case UI_SOURCE_BOOT:
     default:
-        return "Boot";
+        return "启动";
     }
 }
 
