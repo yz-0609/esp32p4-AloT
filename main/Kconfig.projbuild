@@ -1,0 +1,17 @@
+menu "Project Configuration"
+
+    menu "WiFi Configuration"
+        config WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+                SSID of the Wi-Fi access point to connect to.
+
+        config WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+                Password for the Wi-Fi access point.
+    endmenu
+
+endmenu

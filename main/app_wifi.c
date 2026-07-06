@@ -14,8 +14,8 @@
 #include "esp_netif_sntp.h"
 #include "esp_wifi.h"
 
-#define APP_WIFI_SSID          "Lab107_AX6"
-#define APP_WIFI_PASSWORD      "lab120120."
+#define APP_WIFI_SSID          CONFIG_WIFI_SSID
+#define APP_WIFI_PASSWORD      CONFIG_WIFI_PASSWORD
 #define APP_WIFI_MAXIMUM_RETRY 10
 #define APP_TIME_SYNC_RETRY_PERIOD_MS 3000
 
