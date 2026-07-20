@@ -1,12 +1,16 @@
 #include "nvs_flash.h"
 #include "esp_err.h"
+#include "esp_log.h"
 #include "bsp/esp-bsp.h"
 #include "bsp/display.h"
 #include "lvgl.h"
 #include "app_relay.h"
+#include "app_microphone.h"
 #include "app_wifi.h"
 #include "app_weather.h"
 #include "ui.h"
+
+static const char *TAG = "main";
 
 static void app_nvs_init(void)
 {
@@ -22,6 +26,11 @@ void app_main(void)
 {
     app_nvs_init();
     ESP_ERROR_CHECK(app_relay_init());
+
+    esp_err_t microphone_ret = app_microphone_init();
+    if (microphone_ret != ESP_OK) {
+        ESP_LOGE(TAG, "Microphone initialization failed: %s", esp_err_to_name(microphone_ret));
+    }
 
     bsp_display_cfg_t cfg = {
         .lvgl_port_cfg = ESP_LVGL_PORT_INIT_CONFIG(),

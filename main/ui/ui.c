@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "esp_log.h"
 #include "lvgl.h"
+#include "app_microphone.h"
 #include "ui_state.h"
 
 #define UI_W 720
@@ -47,6 +49,7 @@ typedef struct {
 } ui_runtime_t;
 
 static ui_runtime_t s_ui;
+static const char *TAG = "ui";
 static lv_style_t s_screen_style;
 static lv_style_t s_card_style;
 static lv_style_t s_card_accent_style;
@@ -301,6 +304,29 @@ static void ai_event_cb(lv_event_t *event)
     (void)event;
     ui_state_apply_ai_suggestion(&s_ui.state);
     ui_open_page(UI_PAGE_AI);
+}
+
+static void mic_debug_event_cb(lv_event_t *event)
+{
+    (void)event;
+
+    esp_err_t ret;
+    if (app_microphone_is_capturing()) {
+        ret = app_microphone_stop();
+        if (ret == ESP_OK) {
+            ESP_LOGI(TAG, "Microphone capture stop requested from UI");
+        }
+    } else {
+        ret = app_microphone_start();
+        if (ret == ESP_OK) {
+            ESP_LOGI(TAG, "Microphone capture started from UI");
+        }
+    }
+
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Microphone capture UI action failed: %s",
+                 esp_err_to_name(ret));
+    }
 }
 
 static void setting_event_cb(lv_event_t *event)
@@ -643,7 +669,8 @@ static lv_obj_t *build_ai_page(void)
     create_label(check, "继电器间隔：PASS", 24, 92, 200, 18, font_cn_16(), UI_MUTED, LV_TEXT_ALIGN_LEFT);
     create_pill(check, "SAFE", 218, 78, 70);
 
-    create_button(screen, "应用 AI", 260, 542, 198, 46, true, ai_event_cb, NULL);
+    create_button(screen, "应用 AI", 32, 542, 314, 46, true, ai_event_cb, NULL);
+    create_button(screen, "语音调试", 374, 542, 314, 46, false, mic_debug_event_cb, NULL);
     create_navbar(screen, UI_PAGE_AI);
     return screen;
 }

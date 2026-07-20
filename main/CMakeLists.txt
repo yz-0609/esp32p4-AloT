@@ -5,6 +5,7 @@ file(GLOB_RECURSE UI_SRCS
 idf_component_register(
     SRCS
         main.c
+        app_microphone.c
         app_relay.c
         app_wifi.c
         app_weather.c
